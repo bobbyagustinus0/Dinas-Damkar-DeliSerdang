@@ -1,0 +1,41 @@
+[
+  {
+    "id": "kantor-baru-damkar-deliserdang",
+    "tanggal": "2026-02-20",
+    "kategori": "Informasi",
+    "judul": "Bupati Deli Serdang Resmikan Kantor Baru Damkar",
+    "lokasi": "Lubuk Pakam, Kabupaten Deli Serdang",
+    "ringkasan": "Kantor baru Dinas Pemadam Kebakaran dan Penyelamatan Deli Serdang diresmikan bertepatan dengan satu tahun masa jabatan Bupati dan Wakil Bupati.",
+    "isi": "Bupati Deli Serdang dr. H. Asri Ludin Tambunan, didampingi Wakil Bupati Lom Lom Suwondo, meresmikan gedung baru Dinas Pemadam Kebakaran dan Penyelamatan pada Jumat, 20 Februari 2026. Gedung dua lantai ini menyatukan Pos Damkar Pakam dengan kantor dinas: lantai satu digunakan sebagai ruang rescue dan operasional, lantai dua untuk pelayanan publik. Kepala Dinas Damkar, Drs. Khairul Azman, M.A.P., menyampaikan bahwa fasilitas baru ini diharapkan meningkatkan profesionalisme dan kenyamanan personel dalam melayani masyarakat. Peresmian turut disertai penyerahan dua unit mobil pemadam kebakaran.",
+    "sumber": [
+      { "nama": "VIVA Medan", "url": "https://medan.viva.co.id/sumut/12653-resmikan-kantor-damkar-deli-serdang-bupati-asri-menjadi-tempat-para-penyelamat" },
+      { "nama": "detikSumut", "url": "https://www.detik.com/sumut/berita/d-8366478/tepat-setahun-menjabat-bupati-deli-serdang-resmikan-kantor-baru-damkar" },
+      { "nama": "KlikSumut", "url": "https://kliksumut.com/deli-serdang-resmikan-kantor-baru-damkar-tingkatkan-layanan-penanggulangan-kebakaran/" }
+    ]
+  },
+  {
+    "id": "kebakaran-gudang-bahan-baku-sepatu",
+    "tanggal": "2026-06-27",
+    "kategori": "Kejadian",
+    "judul": "Gudang Bahan Baku Sepatu di Deli Serdang Terbakar Hebat",
+    "lokasi": "Kawasan Sunggal, Kabupaten Deli Serdang",
+    "ringkasan": "Gudang penyimpanan bahan baku pembuatan sepatu dan sandal terbakar hingga bangunan roboh. Tidak ada korban jiwa.",
+    "isi": "Kebakaran besar melanda sebuah gudang penyimpanan bahan baku pembuatan sepatu dan sandal di kawasan Sunggal, Kabupaten Deli Serdang, pada Sabtu pagi, 27 Juni 2026 sekitar pukul 06.30 WIB. Petugas pemadam kebakaran setempat, Edi Kusuma, menyebutkan laporan awal diterima dari masyarakat sekitar. Api yang membesar dengan cepat membuat pekerja pabrik dan warga sekitar berhamburan menyelamatkan diri, sementara petugas berupaya memadamkan api dari berbagai sisi bangunan agar tidak menjalar. Besarnya kobaran api menyebabkan bangunan gudang roboh. Tidak ada laporan korban jiwa dalam peristiwa ini, sementara penyebab kebakaran masih dalam penyelidikan.",
+    "sumber": [
+      { "nama": "Kompas TV", "url": "https://www.kompas.tv/regional/677504/kebakaran-gudang-penyimpanan-bahan-baku-pembuatan-sepatu-di-deli-serdang-sapa-malam" },
+      { "nama": "SeputarSumut / detikSumut", "url": "https://www.seputarsumut.com/berita/kebakaran-besar-melanda-pabrik-gudang-penyimpanan-bahan-baku-sepatu-di-sunggal-deli-serdang/" }
+    ]
+  },
+  {
+    "id": "kebakaran-ruko-perumnas-mandala",
+    "tanggal": "2026-07-26",
+    "kategori": "Kejadian",
+    "judul": "Delapan Ruko di Perumnas Mandala Ludes Terbakar",
+    "lokasi": "Kelurahan Kenangan Baru, Kecamatan Percut Sei Tuan, Kabupaten Deli Serdang",
+    "ringkasan": "Delapan unit ruko di Perumnas Mandala terbakar diduga akibat korsleting listrik. Petugas gabungan dikerahkan memadamkan api.",
+    "isi": "Delapan unit rumah toko (ruko) di Jalan Garuda, Perumnas Mandala, Kelurahan Kenangan Baru, Kecamatan Percut Sei Tuan, Kabupaten Deli Serdang, ludes terbakar pada Minggu siang, 26 Juli 2026 sekitar pukul 11.30 WIB. Api diduga berawal dari sebuah ruko salon di lantai dua, lalu merembet cepat ke lantai tiga dan menyebar ke bangunan ruko di sekitarnya. Petugas pemadam kebakaran gabungan, termasuk dari wilayah perbatasan Kota Medan, dikerahkan ke lokasi untuk mengendalikan api. Dugaan sementara penyebab kebakaran adalah korsleting listrik.",
+    "sumber": [
+      { "nama": "Tribun Medan", "url": "https://medan.tribunnews.com/medan-terkini/1804771/penyebab-8-ruko-di-perumnas-mandala-deli-serdang-ludes-terbakar-diduga-dipicu-korsleting-listrik" }
+    ]
+  }
+]

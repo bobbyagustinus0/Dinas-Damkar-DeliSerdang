@@ -1,0 +1,16 @@
+{
+  "name": "Damkar Deli Serdang",
+  "short_name": "Damkar DS",
+  "description": "Dinas Pemadam Kebakaran dan Penyelamatan Kabupaten Deli Serdang",
+  "start_url": "index.html",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#c0392b",
+  "theme_color": "#1a1613",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

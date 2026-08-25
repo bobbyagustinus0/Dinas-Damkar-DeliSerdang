@@ -1,0 +1,31 @@
+{
+  "namaInstansi": "Dinas Pemadam Kebakaran dan Penyelamatan Kabupaten Deli Serdang",
+  "singkatan": "Damkar Deli Serdang",
+  "kabupaten": {
+    "nama": "Kabupaten Deli Serdang",
+    "provinsi": "Sumatera Utara",
+    "ibuKota": "Lubuk Pakam",
+    "luasWilayah": "2.579,98 km²",
+    "jumlahPenduduk": "± 2.078.046 jiwa (estimasi pertengahan 2025)",
+    "bupati": "dr. H. Asri Ludin Tambunan",
+    "wakilBupati": "Lom Lom Suwondo, S.S."
+  },
+  "kepalaDinas": {
+    "nama": "Drs. Khairul Azman, M.A.P.",
+    "jabatan": "Kepala Dinas Pemadam Kebakaran dan Penyelamatan Kabupaten Deli Serdang"
+  },
+  "tugasPokok": "Damkar Deli Serdang tidak hanya menangani pemadaman kebakaran, tetapi juga menjalankan operasi penyelamatan (rescue) dan penanganan kebencanaan lain, termasuk evakuasi hewan dan pertolongan korban dalam situasi darurat non-kebakaran.",
+  "gedungBaru": {
+    "judul": "Kantor Baru Damkar Deli Serdang",
+    "tanggalDiresmikan": "20 Februari 2026",
+    "diresmikanOleh": "Bupati Deli Serdang, dr. H. Asri Ludin Tambunan, didampingi Wakil Bupati Lom Lom Suwondo",
+    "deskripsi": "Gedung dua lantai yang menyatukan Pos Damkar Pakam dengan kantor dinas. Lantai satu difungsikan sebagai ruang rescue dan operasional, sementara lantai dua digunakan untuk pelayanan publik. Peresmian ini bertepatan dengan satu tahun masa jabatan Bupati dan Wakil Bupati Deli Serdang.",
+    "sumber": [
+      { "nama": "VIVA Medan", "url": "https://medan.viva.co.id/sumut/12653-resmikan-kantor-damkar-deli-serdang-bupati-asri-menjadi-tempat-para-penyelamat" },
+      { "nama": "detikSumut", "url": "https://www.detik.com/sumut/berita/d-8366478/tepat-setahun-menjabat-bupati-deli-serdang-resmikan-kantor-baru-damkar" },
+      { "nama": "RealitasOnline.id", "url": "https://www.realitasonline.id/sumut/102416758733/dinas-damkar-dan-penyelamatan-deli-serdang-resmi-pindah-ke-gedung-baru" }
+    ]
+  },
+  "catatanData": "Data jumlah kejadian kebakaran dan jumlah pos pemadam per kecamatan (2021-2023) dipublikasikan resmi melalui Satu Data Deli Serdang. Angka rinci tidak ditampilkan di sini karena belum dapat diverifikasi langsung dari sumber; silakan lihat data resmi di data.deliserdangkab.go.id.",
+  "sumberDataUmum": "https://data.deliserdangkab.go.id/hu/organization/dinas-pemadam-kebakaran-dan-penyelamatan"
+}
