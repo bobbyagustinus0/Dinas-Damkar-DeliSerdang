@@ -90,8 +90,13 @@ app.get('/api/berita/:id', (req, res) => {
   }
 });
 
+// ============================================================
+// PENGADUAN — sekarang disimpan ke MySQL (database sama dengan E-Survey)
+// supaya bisa dibaca oleh dashboard admin E-Survey.
+// ============================================================
+
 // Pengaduan — kirim laporan masyarakat
-app.post('/api/pengaduan', (req, res) => {
+app.post('/api/pengaduan', async (req, res) => {
   try {
     const { nama, kontak, lokasi, kategori, isi } = req.body;
 
@@ -99,7 +104,6 @@ app.post('/api/pengaduan', (req, res) => {
       return res.status(400).json({ error: 'Nama, kontak, dan isi laporan wajib diisi' });
     }
 
-    const pengaduan = readJSON('pengaduan.json');
     const baru = {
       id: 'PGD-' + Date.now(),
       nama,
@@ -108,22 +112,24 @@ app.post('/api/pengaduan', (req, res) => {
       kategori: kategori || 'Umum',
       isi,
       status: 'Baru diterima',
-      waktu: new Date().toISOString(),
     };
-    pengaduan.unshift(baru);
-    writeJSON('pengaduan.json', pengaduan);
+
+    await surveyDb.simpanPengaduan(baru);
 
     res.status(201).json({ message: 'Laporan berhasil dikirim', data: baru });
   } catch (e) {
+    console.error('Gagal menyimpan pengaduan:', e);
     res.status(500).json({ error: 'Gagal menyimpan laporan' });
   }
 });
 
-// Pengaduan — list (untuk keperluan internal / dashboard admin nanti)
-app.get('/api/pengaduan', (req, res) => {
+// Pengaduan — list (untuk keperluan internal / dashboard admin)
+app.get('/api/pengaduan', async (req, res) => {
   try {
-    res.json(readJSON('pengaduan.json'));
+    const data = await surveyDb.ambilSemuaPengaduan();
+    res.json(data);
   } catch (e) {
+    console.error('Gagal memuat data pengaduan:', e);
     res.status(500).json({ error: 'Gagal memuat data pengaduan' });
   }
 });
@@ -287,7 +293,8 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Damkar Deli Serdang API jalan di http://localhost:${PORT}`);
 
-  // Pastikan tabel MySQL bersama (dinas_survey_cache & dinas_survey_jawaban) sudah ada.
+  // Pastikan tabel MySQL bersama (dinas_survey_cache, dinas_survey_jawaban,
+  // dinas_pengaduan) sudah ada.
   surveyDb.ensureTables()
     .then(() => console.log('Koneksi MySQL survei OK, tabel siap.'))
     .catch((err) => console.error('Gagal menyiapkan tabel MySQL survei:', err.message));
