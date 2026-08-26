@@ -1,10 +1,11 @@
 // ============================================================
 // KONEKSI MYSQL BERSAMA (database sama dengan E-Survey)
 // ============================================================
-// Dipakai khusus untuk data survei (dinas_survey_cache & dinas_survey_jawaban).
+// Dipakai untuk data survei (dinas_survey_cache & dinas_survey_jawaban)
+// DAN sekarang juga untuk data pengaduan (dinas_pengaduan), supaya bisa
+// dibaca oleh dashboard E-Survey.
 // Data lain milik Damkar sendiri (berita, layanan, dst) TETAP di file JSON
-// seperti sebelumnya -- yang dipusatkan ke MySQL hanya bagian survei, sesuai
-// permintaan: "1 database MySQL yang sama" untuk integrasi E-Survey.
+// seperti sebelumnya.
 //
 // Koneksi antar sistem (E-Survey <-> Damkar) tetap lewat API/webhook seperti
 // biasa; MySQL di sini hanya dipakai sebagai tempat Damkar menyimpan cache-nya
@@ -42,11 +43,8 @@ function parseIfString(val, fallback = null) {
   return val; // sudah berupa object/array, tidak perlu parse lagi
 }
 
-// Membuat tabel dinas_survey_cache & dinas_survey_jawaban kalau belum ada
-// (idempotent, aman dipanggil setiap kali server start). Definisi tabel
-// yang sama juga ada di e-survey-deliserdang31/docs/sql/dinas_survey_shared_tables.sql
-// (dokumentasi referensi) -- di-inline di sini supaya repo Damkar berdiri sendiri
-// tanpa perlu file dari repo lain.
+// Membuat tabel dinas_survey_cache, dinas_survey_jawaban, & dinas_pengaduan
+// kalau belum ada (idempotent, aman dipanggil setiap kali server start).
 const DDL_CACHE = `
 CREATE TABLE IF NOT EXISTS dinas_survey_cache (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -77,11 +75,27 @@ CREATE TABLE IF NOT EXISTS dinas_survey_jawaban (
   KEY idx_dinas_kode (sumber_dinas, kode_survei)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`;
 
+// Tabel baru: laporan pengaduan masyarakat, disimpan di database yang sama
+// supaya bisa dibaca langsung oleh dashboard E-Survey.
+const DDL_PENGADUAN = `
+CREATE TABLE IF NOT EXISTS dinas_pengaduan (
+  id VARCHAR(50) NOT NULL PRIMARY KEY,
+  sumber_dinas VARCHAR(30) NOT NULL DEFAULT 'damkar',
+  nama VARCHAR(150) NOT NULL,
+  kontak VARCHAR(50) NOT NULL,
+  lokasi VARCHAR(255) NULL,
+  kategori VARCHAR(50) NULL,
+  isi TEXT NOT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'Baru diterima',
+  waktu DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`;
+
 async function ensureTables() {
   const conn = await pool.getConnection();
   try {
     await conn.query(DDL_CACHE);
     await conn.query(DDL_JAWABAN);
+    await conn.query(DDL_PENGADUAN);
   } finally {
     conn.release();
   }
@@ -170,6 +184,33 @@ async function ambilJawabanByKode(kode) {
   }));
 }
 
+// ---------- Fungsi baru: Pengaduan ----------
+
+async function simpanPengaduan(data) {
+  await pool.execute(
+    `INSERT INTO dinas_pengaduan (id, sumber_dinas, nama, kontak, lokasi, kategori, isi, status)
+     VALUES (:id, :sumber_dinas, :nama, :kontak, :lokasi, :kategori, :isi, :status)`,
+    {
+      id: data.id,
+      sumber_dinas: SUMBER_DINAS,
+      nama: data.nama,
+      kontak: data.kontak,
+      lokasi: data.lokasi || '-',
+      kategori: data.kategori || 'Umum',
+      isi: data.isi,
+      status: data.status || 'Baru diterima',
+    }
+  );
+}
+
+async function ambilSemuaPengaduan() {
+  const [rows] = await pool.execute(
+    'SELECT * FROM dinas_pengaduan WHERE sumber_dinas = :sumber_dinas ORDER BY waktu DESC',
+    { sumber_dinas: SUMBER_DINAS }
+  );
+  return rows;
+}
+
 module.exports = {
   pool,
   ensureTables,
@@ -179,4 +220,6 @@ module.exports = {
   simpanJawaban,
   updateStatusKirim,
   ambilJawabanByKode,
+  simpanPengaduan,
+  ambilSemuaPengaduan,
 };
