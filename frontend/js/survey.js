@@ -138,17 +138,69 @@ function renderSurveyQuestion(q) {
     </div>`;
 }
 
+// ------------------------------------------------------------
+// Field Data Diri Responden — bersifat DINAMIS, mengikuti apa yang
+// dikonfigurasi admin di dashboard E-Survey (field_data_diri[] yang
+// dikirim saat push survei). Kalau admin menghapus field bawaan
+// "Nama Lengkap" / "Email" di dashboard E-Survey, field itu otomatis
+// TIDAK akan tampil di sini juga — tidak ada field yang di-hardcode
+// di sisi frontend ini.
+// ------------------------------------------------------------
+function identityFieldInputName(field) {
+  return `field_${field.field_key}`;
+}
+
+function renderIdentityField(field) {
+  const nama = identityFieldInputName(field);
+  const label = escapeHtml(field.label || field.field_key);
+  const wajib = field.wajib_diisi ? 'required' : '';
+  const labelSuffix = field.wajib_diisi ? '' : ' (opsional)';
+
+  if (field.tipe === 'pilihan') {
+    const opsi = field.opsi_pilihan || [];
+    return `
+      <label class="survey-field">
+        <span>${label}${labelSuffix}</span>
+        <select name="${nama}" ${wajib}>
+          <option value="">Pilih ${label}</option>
+          ${opsi.map((o) => `<option value="${escapeHtml(String(o))}">${escapeHtml(String(o))}</option>`).join('')}
+        </select>
+      </label>`;
+  }
+
+  if (field.tipe === 'angka') {
+    return `
+      <label class="survey-field">
+        <span>${label}${labelSuffix}</span>
+        <input type="number" name="${nama}" inputmode="numeric" ${wajib} />
+      </label>`;
+  }
+
+  if (field.tipe === 'email') {
+    return `
+      <label class="survey-field">
+        <span>${label}${labelSuffix}</span>
+        <input type="email" name="${nama}" maxlength="150" placeholder="nama@email.com" ${wajib} />
+      </label>`;
+  }
+
+  // default: teks bebas (mis. Nama Lengkap, kalau admin masih mengaktifkannya)
+  return `
+    <label class="survey-field">
+      <span>${label}${labelSuffix}</span>
+      <input type="text" name="${nama}" maxlength="150" ${wajib} />
+    </label>`;
+}
+
 function renderSurveyForm(survey) {
   const pertanyaan = survey.pertanyaan || [];
+  const fieldDataDiri = survey.field_data_diri || [];
   return `
     <span class="survey-modal-eyebrow">Survei Kepuasan Layanan</span>
     <h2 id="surveyModalTitle">${escapeHtml(survey.judul_survei)}</h2>
     ${survey.deskripsi ? `<p class="survey-modal-desc">${escapeHtml(survey.deskripsi)}</p>` : ''}
     <form id="surveyForm" novalidate>
-      <label class="survey-field">
-        <span>Nama (opsional)</span>
-        <input type="text" name="nama_responden" maxlength="100" placeholder="Nama Anda" />
-      </label>
+      ${fieldDataDiri.map(renderIdentityField).join('')}
       ${pertanyaan.map(renderSurveyQuestion).join('')}
       <div class="survey-modal-footer">
         <button type="button" class="btn btn-outline" data-survey-close>Nanti Saja</button>
@@ -177,11 +229,28 @@ function bindSurveyForm(survey) {
       return;
     }
 
+    // Field data diri: field_key "nama_responden" / "email" / "no_hp" dikirim
+    // sebagai field khusus (sesuai kontrak API E-Survey), field lainnya masuk
+    // ke "data_tambahan" memakai field_key masing-masing
+    // (mis. jenis_kelamin, usia, pendidikan).
+    let nama_responden = null;
+    let email = null;
+    let no_hp = null;
+    const data_tambahan = {};
+    (survey.field_data_diri || []).forEach((f) => {
+      const v = fd.get(identityFieldInputName(f));
+      if (v === null || v === '') return;
+      if (f.field_key === 'nama_responden') nama_responden = v;
+      else if (f.field_key === 'email') email = v;
+      else if (f.field_key === 'no_hp') no_hp = v;
+      else data_tambahan[f.field_key] = v;
+    });
+
     try {
       const res = await fetch(`/api/survey/${encodeURIComponent(survey.kode_survei)}/jawaban`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama_responden: fd.get('nama_responden') || null, jawaban }),
+        body: JSON.stringify({ nama_responden, email, no_hp, data_tambahan, jawaban }),
       });
       const result = await res.json();
       if (!res.ok || !result.success) throw new Error(result.message || 'Gagal mengirim jawaban.');
