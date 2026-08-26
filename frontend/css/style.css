@@ -672,12 +672,14 @@ footer.site-footer {
   font-weight: 600;
   margin-bottom: 4px;
 }
-.survey-field input {
+.survey-field input,
+.survey-field select {
   width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   font-family: var(--font-body);
+  background: #fff;
 }
 
 .survey-question {
