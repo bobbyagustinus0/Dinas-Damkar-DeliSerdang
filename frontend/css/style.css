@@ -662,6 +662,50 @@ footer.site-footer {
   margin-bottom: 16px;
 }
 
+.survey-progress {
+  margin: 2px 0 18px;
+}
+.survey-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+.survey-progress-fill {
+  height: 100%;
+  background: var(--ember);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+.survey-progress-label {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.survey-step {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.survey-step[hidden] { display: none; }
+
+.survey-step-title {
+  display: block;
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  padding: 0 0 8px;
+  margin: 0 0 14px;
+  border-bottom: 2px solid var(--ember);
+  color: var(--ink-text);
+}
+
 .survey-field {
   display: block;
   margin-bottom: 14px;
@@ -785,9 +829,26 @@ footer.site-footer {
 
 .survey-modal-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+.survey-modal-footer [data-survey-close] {
+  margin-right: auto;
+}
+@media (max-width: 420px) {
+  .survey-modal-footer {
+    justify-content: stretch;
+  }
+  .survey-modal-footer button {
+    flex: 1 1 auto;
+  }
+  .survey-modal-footer [data-survey-close] {
+    margin-right: 0;
+    order: 3;
+    flex-basis: 100%;
+  }
 }
 
 .survey-form-result {
