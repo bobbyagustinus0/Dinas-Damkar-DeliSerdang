@@ -728,26 +728,59 @@ footer.site-footer {
 
 .survey-scale--star {
   gap: 8px;
+  flex-wrap: wrap;
 }
 .survey-scale--star .survey-star-option {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 64px;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 3px;
   text-align: center;
-  min-width: 76px;
-  padding: 10px 8px;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: #fff;
+}
+/* sembunyikan bulatan radio bawaan browser — status terpilih ditandai
+   lewat highlight pada kartunya sendiri, bukan lewat radio bulat */
+.survey-scale--star .survey-star-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
 }
 .survey-scale--star .survey-star-icon {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: #d9a441;
   line-height: 1;
 }
 .survey-scale--star .survey-star-text {
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   font-weight: 600;
+  line-height: 1.15;
 }
-.survey-scale--star label:has(input:checked) .survey-star-icon {
+.survey-scale--star label:has(input:checked),
+.survey-scale--star label.is-selected {
+  border-color: var(--ember);
+  background: rgba(225, 79, 31, 0.1);
+  box-shadow: 0 0 0 3px rgba(225, 79, 31, 0.12);
+  transform: translateY(-2px);
+}
+.survey-scale--star label:has(input:checked) .survey-star-icon,
+.survey-scale--star label.is-selected .survey-star-icon {
   color: var(--ember);
+}
+.survey-scale--star label:has(input:checked) .survey-star-text,
+.survey-scale--star label.is-selected .survey-star-text {
+  color: var(--ember-dark);
+}
+.survey-scale--star label:hover {
+  border-color: var(--ember);
+  transform: translateY(-1px);
 }
 
 .survey-modal-footer {
