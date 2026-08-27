@@ -109,12 +109,24 @@ function renderSurveyQuestion(q) {
   }
 
   if (tipe === 'rating_bintang') {
+    // Label bintang bisa dikustomisasi lewat opsi_jawaban dari dashboard
+    // E-Survey (satu baris = satu label, urutan bintang 1 ke atas). Kalau
+    // admin tidak mengisi label kustom, dipakai label default berikut.
+    const labelDefault = ['Tidak Sesuai', 'Kurang Sesuai', 'Agak Sesuai', 'Sesuai', 'Sangat Sesuai'];
+    const labelBintang = Array.isArray(q.opsi_jawaban) && q.opsi_jawaban.length >= 2
+      ? q.opsi_jawaban
+      : labelDefault;
+
     return `
       <div class="survey-question">
         <span>${escapeHtml(q.pertanyaan)}</span>
-        <div class="survey-scale">
-          ${[1, 2, 3, 4, 5].map((o) => `
-            <label><input type="radio" name="${nama}" value="${o}" ${q.wajib_diisi ? 'required' : ''} />${'★'.repeat(o)}</label>`).join('')}
+        <div class="survey-scale survey-scale--star">
+          ${labelBintang.map((label, idx) => `
+            <label class="survey-star-option">
+              <input type="radio" name="${nama}" value="${idx + 1}" ${q.wajib_diisi ? 'required' : ''} />
+              <span class="survey-star-icon">★</span>
+              <span class="survey-star-text">${escapeHtml(String(label))}</span>
+            </label>`).join('')}
         </div>
       </div>`;
   }
