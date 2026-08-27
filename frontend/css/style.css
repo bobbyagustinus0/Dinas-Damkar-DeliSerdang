@@ -834,6 +834,15 @@ footer.site-footer {
   gap: 10px;
   margin-top: 20px;
 }
+/* PENTING: .btn sudah punya "display: inline-flex" di atas, yang kalau
+   tidak ditimpa akan MENGALAHKAN efek atribut [hidden] bawaan browser
+   (karena origin aturan penulis/author CSS selalu menang atas aturan
+   default browser, walau specificity-nya setara). Tanpa baris ini,
+   tombol "Sebelumnya"/"Selanjutnya"/"Kirim Jawaban" yang di-hidden lewat
+   JS tetap akan kelihatan semua di setiap langkah. */
+.survey-modal-footer button[hidden] {
+  display: none !important;
+}
 .survey-modal-footer [data-survey-close] {
   margin-right: auto;
 }
