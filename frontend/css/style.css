@@ -719,6 +719,37 @@ footer.site-footer {
 }
 .survey-scale input, .survey-choice input { accent-color: var(--ember); }
 
+.survey-scale label:has(input:checked),
+.survey-choice label:has(input:checked) {
+  border-color: var(--ember);
+  background: rgba(225, 79, 31, 0.08);
+  color: var(--ember-dark);
+}
+
+.survey-scale--star {
+  gap: 8px;
+}
+.survey-scale--star .survey-star-option {
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  min-width: 76px;
+  padding: 10px 8px;
+}
+.survey-scale--star .survey-star-icon {
+  font-size: 1.3rem;
+  color: #d9a441;
+  line-height: 1;
+}
+.survey-scale--star .survey-star-text {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.survey-scale--star label:has(input:checked) .survey-star-icon {
+  color: var(--ember);
+}
+
 .survey-modal-footer {
   display: flex;
   justify-content: flex-end;
