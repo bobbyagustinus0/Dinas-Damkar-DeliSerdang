@@ -222,9 +222,26 @@ function renderSurveyForm(survey) {
     </form>`;
 }
 
+function initStarRatingCards(scope) {
+  scope.querySelectorAll('.survey-scale--star').forEach((group) => {
+    const cards = Array.from(group.querySelectorAll('.survey-star-option'));
+    cards.forEach((card) => {
+      const input = card.querySelector('input[type="radio"]');
+      if (!input) return;
+      if (input.checked) card.classList.add('is-selected');
+      input.addEventListener('change', () => {
+        cards.forEach((c) => c.classList.remove('is-selected'));
+        if (input.checked) card.classList.add('is-selected');
+      });
+    });
+  });
+}
+
 function bindSurveyForm(survey) {
   const form = document.getElementById('surveyForm');
   if (!form) return;
+
+  initStarRatingCards(form);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
