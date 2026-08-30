@@ -109,12 +109,24 @@ function renderSurveyQuestion(q) {
   }
 
   if (tipe === 'rating_bintang') {
+    // Label bintang bisa dikustomisasi lewat opsi_jawaban dari dashboard
+    // E-Survey (satu baris = satu label, urutan bintang 1 ke atas). Kalau
+    // admin tidak mengisi label kustom, dipakai label default berikut.
+    const labelDefault = ['Tidak Sesuai', 'Kurang Sesuai', 'Agak Sesuai', 'Sesuai', 'Sangat Sesuai'];
+    const labelBintang = Array.isArray(q.opsi_jawaban) && q.opsi_jawaban.length >= 2
+      ? q.opsi_jawaban
+      : labelDefault;
+
     return `
       <div class="survey-question">
         <span>${escapeHtml(q.pertanyaan)}</span>
-        <div class="survey-scale">
-          ${[1, 2, 3, 4, 5].map((o) => `
-            <label><input type="radio" name="${nama}" value="${o}" ${q.wajib_diisi ? 'required' : ''} />${'★'.repeat(o)}</label>`).join('')}
+        <div class="survey-scale survey-scale--star">
+          ${labelBintang.map((label, idx) => `
+            <label class="survey-star-option">
+              <input type="radio" name="${nama}" value="${idx + 1}" ${q.wajib_diisi ? 'required' : ''} />
+              <span class="survey-star-icon">★</span>
+              <span class="survey-star-text">${escapeHtml(String(label))}</span>
+            </label>`).join('')}
         </div>
       </div>`;
   }
@@ -138,32 +150,257 @@ function renderSurveyQuestion(q) {
     </div>`;
 }
 
+// ------------------------------------------------------------
+// Field Data Diri Responden — bersifat DINAMIS, mengikuti apa yang
+// dikonfigurasi admin di dashboard E-Survey (field_data_diri[] yang
+// dikirim saat push survei). Kalau admin menghapus field bawaan
+// "Nama Lengkap" / "Email" di dashboard E-Survey, field itu otomatis
+// TIDAK akan tampil di sini juga — tidak ada field yang di-hardcode
+// di sisi frontend ini.
+// ------------------------------------------------------------
+function identityFieldInputName(field) {
+  return `field_${field.field_key}`;
+}
+
+function renderIdentityField(field) {
+  const nama = identityFieldInputName(field);
+  const label = escapeHtml(field.label || field.field_key);
+  const wajib = field.wajib_diisi ? 'required' : '';
+  const labelSuffix = field.wajib_diisi ? '' : ' (opsional)';
+
+  if (field.tipe === 'pilihan') {
+    const opsi = field.opsi_pilihan || [];
+    return `
+      <label class="survey-field">
+        <span>${label}${labelSuffix}</span>
+        <select name="${nama}" ${wajib}>
+          <option value="">Pilih ${label}</option>
+          ${opsi.map((o) => `<option value="${escapeHtml(String(o))}">${escapeHtml(String(o))}</option>`).join('')}
+        </select>
+      </label>`;
+  }
+
+  if (field.tipe === 'angka') {
+    return `
+      <label class="survey-field">
+        <span>${label}${labelSuffix}</span>
+        <input type="number" name="${nama}" inputmode="numeric" ${wajib} />
+      </label>`;
+  }
+
+  if (field.tipe === 'email') {
+    return `
+      <label class="survey-field">
+        <span>${label}${labelSuffix}</span>
+        <input type="email" name="${nama}" maxlength="150" placeholder="nama@email.com" ${wajib} />
+      </label>`;
+  }
+
+  // default: teks bebas (mis. Nama Lengkap, kalau admin masih mengaktifkannya)
+  return `
+    <label class="survey-field">
+      <span>${label}${labelSuffix}</span>
+      <input type="text" name="${nama}" maxlength="150" ${wajib} />
+    </label>`;
+}
+
+// ------------------------------------------------------------
+// Wizard bertahap — mengelompokkan pertanyaan berdasarkan field
+// "kategori" yang sudah dikirim E-Survey per pertanyaan (lihat
+// docs/API_CONTRACT.md di repo E-Survey: pertanyaan[].kategori).
+// Setiap kategori otomatis jadi satu langkah/halaman sendiri, jadi
+// urutan & jumlah langkah SEPENUHNYA mengikuti apa yang dibuat admin
+// di dashboard E-Survey (mis. "Persyaratan, Biaya, dan Prosedur",
+// "Fungsionalitas Layanan Digital", ..., "Saran & Masukan (Opsional)")
+// — tidak ada nama kategori yang di-hardcode di sisi frontend ini.
+// Langkah pertama khusus "Profil" diambil dari field_data_diri
+// (jenis kelamin, usia, dll).
+// ------------------------------------------------------------
+function groupPertanyaanByKategori(pertanyaanList) {
+  const terurut = [...(pertanyaanList || [])].sort((a, b) => {
+    const ua = Number.isFinite(a.urutan) ? a.urutan : 0;
+    const ub = Number.isFinite(b.urutan) ? b.urutan : 0;
+    return ua - ub;
+  });
+
+  const map = new Map();
+  terurut.forEach((q) => {
+    const kategori = (q.kategori && String(q.kategori).trim()) || 'Pertanyaan Lainnya';
+    if (!map.has(kategori)) map.set(kategori, []);
+    map.get(kategori).push(q);
+  });
+
+  return Array.from(map.entries()).map(([kategori, pertanyaan]) => ({ kategori, pertanyaan }));
+}
+
+function buildSurveySteps(survey) {
+  const fieldDataDiri = survey.field_data_diri || [];
+  const kelompokKategori = groupPertanyaanByKategori(survey.pertanyaan || []);
+
+  const steps = [];
+  if (fieldDataDiri.length) {
+    steps.push({ judul: 'Profil', html: fieldDataDiri.map(renderIdentityField).join('') });
+  }
+  kelompokKategori.forEach((k) => {
+    steps.push({ judul: k.kategori, html: k.pertanyaan.map(renderSurveyQuestion).join('') });
+  });
+
+  // Kalau survei ternyata kosong (tidak ada field profil maupun
+  // pertanyaan), tetap sediakan satu langkah kosong biar form tidak rusak.
+  if (!steps.length) steps.push({ judul: 'Pertanyaan', html: '' });
+
+  return steps;
+}
+
 function renderSurveyForm(survey) {
-  const pertanyaan = survey.pertanyaan || [];
+  const steps = buildSurveySteps(survey);
+  const totalStep = steps.length;
+
   return `
     <span class="survey-modal-eyebrow">Survei Kepuasan Layanan</span>
     <h2 id="surveyModalTitle">${escapeHtml(survey.judul_survei)}</h2>
     ${survey.deskripsi ? `<p class="survey-modal-desc">${escapeHtml(survey.deskripsi)}</p>` : ''}
+    <div class="survey-progress">
+      <div class="survey-progress-track">
+        <div class="survey-progress-fill" id="surveyProgressFill" style="width:${(100 / totalStep).toFixed(2)}%"></div>
+      </div>
+      <span class="survey-progress-label" id="surveyProgressLabel">Langkah 1 dari ${totalStep}</span>
+    </div>
     <form id="surveyForm" novalidate>
-      <label class="survey-field">
-        <span>Nama (opsional)</span>
-        <input type="text" name="nama_responden" maxlength="100" placeholder="Nama Anda" />
-      </label>
-      ${pertanyaan.map(renderSurveyQuestion).join('')}
+      ${steps.map((step, i) => `
+        <fieldset class="survey-step" data-step-index="${i}" ${i === 0 ? '' : 'hidden'}>
+          <legend class="survey-step-title">${i + 1}. ${escapeHtml(step.judul)}</legend>
+          ${step.html}
+        </fieldset>`).join('')}
       <div class="survey-modal-footer">
         <button type="button" class="btn btn-outline" data-survey-close>Nanti Saja</button>
-        <button type="submit" class="btn btn-primary">Kirim Jawaban</button>
+        <button type="button" class="btn btn-outline" data-survey-prev hidden>Sebelumnya</button>
+        <button type="button" class="btn btn-primary" data-survey-next>Selanjutnya</button>
+        <button type="submit" class="btn btn-primary" data-survey-submit hidden>Kirim Jawaban</button>
       </div>
       <div class="survey-form-result" id="surveyFormResult" aria-live="polite"></div>
     </form>`;
+}
+
+function currentSurveyStepIndex(form) {
+  const active = form.querySelector('.survey-step:not([hidden])');
+  return active ? Number(active.dataset.stepIndex) : 0;
+}
+
+// Validasi manual per-langkah: hanya mengecek field wajib pada
+// fieldset yang sedang tampil (field di langkah lain yang masih
+// hidden sengaja dilewati, biar pengguna tidak diblok jawaban di
+// langkah yang belum dia lihat).
+function validateSurveyStep(fieldset) {
+  let valid = true;
+  let firstInvalid = null;
+  const radioGroupDicek = new Set();
+
+  fieldset.querySelectorAll('[required]').forEach((el) => {
+    if (el.type === 'radio') {
+      if (radioGroupDicek.has(el.name)) return;
+      radioGroupDicek.add(el.name);
+      const terpilih = Array.from(fieldset.querySelectorAll(`input[name="${el.name}"]`)).some((r) => r.checked);
+      if (!terpilih) {
+        valid = false;
+        if (!firstInvalid) firstInvalid = el;
+      }
+    } else if (!el.value || !el.value.trim()) {
+      valid = false;
+      if (!firstInvalid) firstInvalid = el;
+    }
+  });
+
+  if (firstInvalid) firstInvalid.focus();
+  return valid;
+}
+
+function goToSurveyStep(form, targetIndex) {
+  const fieldsets = Array.from(form.querySelectorAll('.survey-step'));
+  const total = fieldsets.length;
+  const idxAman = Math.max(0, Math.min(targetIndex, total - 1));
+
+  fieldsets.forEach((fs) => {
+    fs.hidden = Number(fs.dataset.stepIndex) !== idxAman;
+  });
+
+  const prevBtn = form.querySelector('[data-survey-prev]');
+  const nextBtn = form.querySelector('[data-survey-next]');
+  const submitBtn = form.querySelector('[data-survey-submit]');
+  const isLast = idxAman === total - 1;
+  if (prevBtn) prevBtn.hidden = idxAman === 0;
+  if (nextBtn) nextBtn.hidden = isLast;
+  if (submitBtn) submitBtn.hidden = !isLast;
+
+  const fill = document.getElementById('surveyProgressFill');
+  const label = document.getElementById('surveyProgressLabel');
+  if (fill) fill.style.width = `${(((idxAman + 1) / total) * 100).toFixed(2)}%`;
+  if (label) {
+    const judulAktif = (fieldsets[idxAman]?.querySelector('.survey-step-title')?.textContent || '').replace(/^\d+\.\s*/, '');
+    label.textContent = `Langkah ${idxAman + 1} dari ${total}: ${judulAktif}`;
+  }
+
+  const resultBox = document.getElementById('surveyFormResult');
+  if (resultBox) resultBox.innerHTML = '';
+
+  const modalEl = form.closest('.survey-modal');
+  if (modalEl) modalEl.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initStarRatingCards(scope) {
+  scope.querySelectorAll('.survey-scale--star').forEach((group) => {
+    const cards = Array.from(group.querySelectorAll('.survey-star-option'));
+    cards.forEach((card) => {
+      const input = card.querySelector('input[type="radio"]');
+      if (!input) return;
+      if (input.checked) card.classList.add('is-selected');
+      input.addEventListener('change', () => {
+        cards.forEach((c) => c.classList.remove('is-selected'));
+        if (input.checked) card.classList.add('is-selected');
+      });
+    });
+  });
 }
 
 function bindSurveyForm(survey) {
   const form = document.getElementById('surveyForm');
   if (!form) return;
 
+  initStarRatingCards(form);
+
+  const fieldsets = Array.from(form.querySelectorAll('.survey-step'));
+  const totalStep = fieldsets.length;
+
+  form.querySelector('[data-survey-next]')?.addEventListener('click', () => {
+    const idx = currentSurveyStepIndex(form);
+    const fieldsetAktif = fieldsets[idx];
+    if (fieldsetAktif && !validateSurveyStep(fieldsetAktif)) {
+      document.getElementById('surveyFormResult').innerHTML =
+        '<div class="survey-form-result is-error">Mohon lengkapi pertanyaan wajib pada langkah ini terlebih dahulu.</div>';
+      return;
+    }
+    if (idx < totalStep - 1) goToSurveyStep(form, idx + 1);
+  });
+
+  form.querySelector('[data-survey-prev]')?.addEventListener('click', () => {
+    const idx = currentSurveyStepIndex(form);
+    if (idx > 0) goToSurveyStep(form, idx - 1);
+  });
+
+  // Set kondisi awal tombol/progress sesuai langkah pertama.
+  if (totalStep) goToSurveyStep(form, 0);
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    const idx = currentSurveyStepIndex(form);
+    const fieldsetAktif = fieldsets[idx];
+    if (fieldsetAktif && !validateSurveyStep(fieldsetAktif)) {
+      document.getElementById('surveyFormResult').innerHTML =
+        '<div class="survey-form-result is-error">Mohon lengkapi pertanyaan wajib pada langkah ini terlebih dahulu.</div>';
+      return;
+    }
+
     const fd = new FormData(form);
     const jawaban = {};
     (survey.pertanyaan || []).forEach((q) => {
@@ -177,11 +414,28 @@ function bindSurveyForm(survey) {
       return;
     }
 
+    // Field data diri: field_key "nama_responden" / "email" / "no_hp" dikirim
+    // sebagai field khusus (sesuai kontrak API E-Survey), field lainnya masuk
+    // ke "data_tambahan" memakai field_key masing-masing
+    // (mis. jenis_kelamin, usia, pendidikan).
+    let nama_responden = null;
+    let email = null;
+    let no_hp = null;
+    const data_tambahan = {};
+    (survey.field_data_diri || []).forEach((f) => {
+      const v = fd.get(identityFieldInputName(f));
+      if (v === null || v === '') return;
+      if (f.field_key === 'nama_responden') nama_responden = v;
+      else if (f.field_key === 'email') email = v;
+      else if (f.field_key === 'no_hp') no_hp = v;
+      else data_tambahan[f.field_key] = v;
+    });
+
     try {
       const res = await fetch(`/api/survey/${encodeURIComponent(survey.kode_survei)}/jawaban`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama_responden: fd.get('nama_responden') || null, jawaban }),
+        body: JSON.stringify({ nama_responden, email, no_hp, data_tambahan, jawaban }),
       });
       const result = await res.json();
       if (!res.ok || !result.success) throw new Error(result.message || 'Gagal mengirim jawaban.');

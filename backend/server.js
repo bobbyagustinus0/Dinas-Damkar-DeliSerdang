@@ -22,12 +22,6 @@ const ESURVEY_WEBHOOK_TOKEN = process.env.ESURVEY_WEBHOOK_TOKEN || 'ISI_TOKEN_DA
 const ESURVEY_WEBHOOK_URL =
   process.env.ESURVEY_WEBHOOK_URL || 'http://127.0.0.1:8000/api/webhook/survey-jawaban';
 
-// Kode survei "wadah" di E-Survey yang dipakai untuk menampung laporan pengaduan
-// dari form ini. Template dengan kode ini harus dibuat & diaktifkan dulu di
-// dashboard E-Survey (menu Template Survei/Data Survei) supaya ke-push ke sini
-// dan tersimpan di cache dinas_survey_cache. Lihat fungsi kirimPengaduanKeESurvey().
-const PENGADUAN_KODE_SURVEI = process.env.PENGADUAN_KODE_SURVEI || 'PENGADUAN-DAMKAR';
-
 app.use(cors()); // biar API ini bisa dipanggil dari app mobile / domain lain
 app.use(express.json());
 
@@ -96,6 +90,11 @@ app.get('/api/berita/:id', (req, res) => {
   }
 });
 
+// ============================================================
+// PENGADUAN — sekarang disimpan ke MySQL (database sama dengan E-Survey)
+// supaya bisa dibaca oleh dashboard admin E-Survey.
+// ============================================================
+
 // Pengaduan — kirim laporan masyarakat
 app.post('/api/pengaduan', async (req, res) => {
   try {
@@ -105,7 +104,6 @@ app.post('/api/pengaduan', async (req, res) => {
       return res.status(400).json({ error: 'Nama, kontak, dan isi laporan wajib diisi' });
     }
 
-    const pengaduan = readJSON('pengaduan.json');
     const baru = {
       id: 'PGD-' + Date.now(),
       nama,
@@ -114,134 +112,24 @@ app.post('/api/pengaduan', async (req, res) => {
       kategori: kategori || 'Umum',
       isi,
       status: 'Baru diterima',
-      waktu: new Date().toISOString(),
     };
-    pengaduan.unshift(baru);
-    writeJSON('pengaduan.json', pengaduan);
 
-    // Tetap balas sukses ke warga meskipun sinkronisasi ke E-Survey gagal —
-    // laporan sudah aman tersimpan di pengaduan.json.
-    const esurveySync = await kirimPengaduanKeESurvey(baru);
+    await surveyDb.simpanPengaduan(baru);
 
-    res.status(201).json({ message: 'Laporan berhasil dikirim', data: baru, esurvey_sync: esurveySync });
+    res.status(201).json({ message: 'Laporan berhasil dikirim', data: baru });
   } catch (e) {
+    console.error('Gagal menyimpan pengaduan:', e);
     res.status(500).json({ error: 'Gagal menyimpan laporan' });
   }
 });
 
-// ------------------------------------------------------------
-// Teruskan 1 laporan pengaduan ke E-Survey, supaya muncul di
-// dashboard E-Survey (menu "Respon Survei" & kartu "Total Responden").
-//
-// Caranya: laporan pengaduan "dititipkan" sebagai jawaban dari sebuah
-// survei bertipe formulir (semua pertanyaan esai/isian) bernama
-// PENGADUAN_KODE_SURVEI, yang sudah dibuat & diaktifkan di dashboard
-// E-Survey lalu otomatis ter-push & ter-cache di sini (dinas_survey_cache).
-//
-// Pertanyaan di template tersebut dicocokkan berdasarkan kata kunci di
-// teks pertanyaannya (kategori / lokasi / isi-laporan), jadi tidak perlu
-// hardcode ID pertanyaan.
-// ------------------------------------------------------------
-async function kirimPengaduanKeESurvey(pengaduan) {
+// Pengaduan — list (untuk keperluan internal / dashboard admin)
+app.get('/api/pengaduan', async (req, res) => {
   try {
-    const survey = await surveyDb.ambilSurveiByKode(PENGADUAN_KODE_SURVEI);
-
-    if (!survey) {
-      console.warn(
-        `[eSurvey] Template survei "${PENGADUAN_KODE_SURVEI}" belum ada di cache. ` +
-        'Buat & aktifkan dulu template ini di dashboard E-Survey supaya pengaduan bisa disinkronkan.'
-      );
-      return { terkirim: false, alasan: 'template_belum_ditemukan' };
-    }
-
-    if (survey.status !== 'aktif') {
-      console.warn(`[eSurvey] Template survei "${PENGADUAN_KODE_SURVEI}" statusnya belum aktif.`);
-      return { terkirim: false, alasan: 'template_belum_aktif' };
-    }
-
-    const pertanyaan = Array.isArray(survey.pertanyaan) ? survey.pertanyaan : [];
-    if (pertanyaan.length === 0) {
-      console.warn(`[eSurvey] Template survei "${PENGADUAN_KODE_SURVEI}" belum punya pertanyaan.`);
-      return { terkirim: false, alasan: 'template_tanpa_pertanyaan' };
-    }
-
-    // Cocokkan tiap field pengaduan ke pertanyaan lewat kata kunci di teksnya.
-    const cari = (kataKunci) =>
-      pertanyaan.find((p) => kataKunci.some((k) => (p.pertanyaan || '').toLowerCase().includes(k)));
-
-    const petaField = [
-      { field: 'kategori', nilai: pengaduan.kategori, kataKunci: ['kategori', 'jenis laporan'] },
-      { field: 'lokasi', nilai: pengaduan.lokasi, kataKunci: ['lokasi', 'alamat', 'tempat kejadian'] },
-      { field: 'isi', nilai: pengaduan.isi, kataKunci: ['isi laporan', 'kronologi', 'keluhan', 'kejadian', 'uraian'] },
-    ];
-
-    const jawaban = {};
-    const urutanTerpakai = new Set();
-
-    petaField.forEach(({ nilai, kataKunci }) => {
-      let soal = cari(kataKunci);
-      // fallback: kalau tidak ketemu lewat kata kunci, pakai urutan berikutnya yang belum terpakai
-      if (!soal) {
-        soal = pertanyaan
-          .slice()
-          .sort((a, b) => (a.urutan || 0) - (b.urutan || 0))
-          .find((p) => !urutanTerpakai.has(p.id));
-      }
-      if (soal) {
-        jawaban[soal.id] = nilai;
-        urutanTerpakai.add(soal.id);
-      }
-    });
-
-    if (Object.keys(jawaban).length === 0) {
-      return { terkirim: false, alasan: 'tidak_ada_pertanyaan_cocok' };
-    }
-
-    const id = crypto.randomUUID();
-    const dataKirim = {
-      nama_responden: pengaduan.nama,
-      email: null,
-      no_hp: pengaduan.kontak,
-      data_tambahan: {
-        sumber: 'form-pengaduan-website',
-        nomor_tiket: pengaduan.id,
-        kategori: pengaduan.kategori,
-        lokasi: pengaduan.lokasi,
-      },
-      jawaban,
-    };
-
-    await surveyDb.simpanJawaban(id, PENGADUAN_KODE_SURVEI, survey.judul_survei, dataKirim);
-
-    const response = await fetch(ESURVEY_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Webhook-Token': ESURVEY_WEBHOOK_TOKEN },
-      body: JSON.stringify({ kode_survei: PENGADUAN_KODE_SURVEI, ...dataKirim }),
-    });
-
-    const resultText = await response.text();
-    let result;
-    try { result = JSON.parse(resultText); } catch { result = { message: resultText }; }
-
-    await surveyDb.updateStatusKirim(id, response.ok ? 'terkirim' : 'gagal', result);
-
-    if (!response.ok) {
-      console.error('[eSurvey] Gagal meneruskan pengaduan ke E-Survey:', result);
-      return { terkirim: false, alasan: 'ditolak_esurvey', detail: result };
-    }
-
-    return { terkirim: true, response_id: result?.data?.response_id || null };
-  } catch (err) {
-    console.error('[eSurvey] Error meneruskan pengaduan ke E-Survey:', err.message);
-    return { terkirim: false, alasan: 'error', error: err.message };
-  }
-}
-
-// Pengaduan — list (untuk keperluan internal / dashboard admin nanti)
-app.get('/api/pengaduan', (req, res) => {
-  try {
-    res.json(readJSON('pengaduan.json'));
+    const data = await surveyDb.ambilSemuaPengaduan();
+    res.json(data);
   } catch (e) {
+    console.error('Gagal memuat data pengaduan:', e);
     res.status(500).json({ error: 'Gagal memuat data pengaduan' });
   }
 });
@@ -405,7 +293,8 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Damkar Deli Serdang API jalan di http://localhost:${PORT}`);
 
-  // Pastikan tabel MySQL bersama (dinas_survey_cache & dinas_survey_jawaban) sudah ada.
+  // Pastikan tabel MySQL bersama (dinas_survey_cache, dinas_survey_jawaban,
+  // dinas_pengaduan) sudah ada.
   surveyDb.ensureTables()
     .then(() => console.log('Koneksi MySQL survei OK, tabel siap.'))
     .catch((err) => console.error('Gagal menyiapkan tabel MySQL survei:', err.message));

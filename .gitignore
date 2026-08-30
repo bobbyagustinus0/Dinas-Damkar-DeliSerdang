@@ -1,0 +1,9 @@
+# Dependencies
+node_modules/
+
+# Environment variables (jangan diupload, isi rahasia)
+backend/.env
+
+# OS / editor files
+.DS_Store
+Thumbs.db

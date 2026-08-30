@@ -662,6 +662,50 @@ footer.site-footer {
   margin-bottom: 16px;
 }
 
+.survey-progress {
+  margin: 2px 0 18px;
+}
+.survey-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+.survey-progress-fill {
+  height: 100%;
+  background: var(--ember);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+.survey-progress-label {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.survey-step {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.survey-step[hidden] { display: none; }
+
+.survey-step-title {
+  display: block;
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  padding: 0 0 8px;
+  margin: 0 0 14px;
+  border-bottom: 2px solid var(--ember);
+  color: var(--ink-text);
+}
+
 .survey-field {
   display: block;
   margin-bottom: 14px;
@@ -672,12 +716,14 @@ footer.site-footer {
   font-weight: 600;
   margin-bottom: 4px;
 }
-.survey-field input {
+.survey-field input,
+.survey-field select {
   width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   font-family: var(--font-body);
+  background: #fff;
 }
 
 .survey-question {
@@ -717,11 +763,101 @@ footer.site-footer {
 }
 .survey-scale input, .survey-choice input { accent-color: var(--ember); }
 
+.survey-scale label:has(input:checked),
+.survey-choice label:has(input:checked) {
+  border-color: var(--ember);
+  background: rgba(225, 79, 31, 0.08);
+  color: var(--ember-dark);
+}
+
+.survey-scale--star {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.survey-scale--star .survey-star-option {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 64px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: #fff;
+}
+/* sembunyikan bulatan radio bawaan browser — status terpilih ditandai
+   lewat highlight pada kartunya sendiri, bukan lewat radio bulat */
+.survey-scale--star .survey-star-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+.survey-scale--star .survey-star-icon {
+  font-size: 1.2rem;
+  color: #d9a441;
+  line-height: 1;
+}
+.survey-scale--star .survey-star-text {
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.survey-scale--star label:has(input:checked),
+.survey-scale--star label.is-selected {
+  border-color: var(--ember);
+  background: rgba(225, 79, 31, 0.1);
+  box-shadow: 0 0 0 3px rgba(225, 79, 31, 0.12);
+  transform: translateY(-2px);
+}
+.survey-scale--star label:has(input:checked) .survey-star-icon,
+.survey-scale--star label.is-selected .survey-star-icon {
+  color: var(--ember);
+}
+.survey-scale--star label:has(input:checked) .survey-star-text,
+.survey-scale--star label.is-selected .survey-star-text {
+  color: var(--ember-dark);
+}
+.survey-scale--star label:hover {
+  border-color: var(--ember);
+  transform: translateY(-1px);
+}
+
 .survey-modal-footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+/* PENTING: .btn sudah punya "display: inline-flex" di atas, yang kalau
+   tidak ditimpa akan MENGALAHKAN efek atribut [hidden] bawaan browser
+   (karena origin aturan penulis/author CSS selalu menang atas aturan
+   default browser, walau specificity-nya setara). Tanpa baris ini,
+   tombol "Sebelumnya"/"Selanjutnya"/"Kirim Jawaban" yang di-hidden lewat
+   JS tetap akan kelihatan semua di setiap langkah. */
+.survey-modal-footer button[hidden] {
+  display: none !important;
+}
+.survey-modal-footer [data-survey-close] {
+  margin-right: auto;
+}
+@media (max-width: 420px) {
+  .survey-modal-footer {
+    justify-content: stretch;
+  }
+  .survey-modal-footer button {
+    flex: 1 1 auto;
+  }
+  .survey-modal-footer [data-survey-close] {
+    margin-right: 0;
+    order: 3;
+    flex-basis: 100%;
+  }
 }
 
 .survey-form-result {
