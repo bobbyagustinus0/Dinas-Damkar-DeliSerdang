@@ -1,0 +1,28 @@
+{
+  "kanalDarurat": [
+    { "label": "Nomor Tunggal Panggilan Darurat (NTPD)", "nilai": "112", "keterangan": "Gratis, 24 jam, dari semua operator seluler" },
+    { "label": "Call Center Damkar Deli Serdang", "nilai": "(061) 795-1113", "keterangan": "24 jam" },
+    { "label": "Instagram Resmi", "nilai": "@pasdamkar_deliserdang", "keterangan": "Pusat informasi kebakaran dan penyelamatan Kab. Deli Serdang", "url": "https://www.instagram.com/pasdamkar_deliserdang/" },
+    { "label": "Facebook Resmi", "nilai": "Damkar Kabupaten Deli Serdang", "keterangan": "Update kegiatan pemadam kebakaran dan penyelamatan", "url": "https://www.facebook.com/pemadamkebakarankabdeliserdang/" }
+  ],
+  "layananUtama": [
+    {
+      "judul": "Pemadaman Kebakaran",
+      "deskripsi": "Penanganan kejadian kebakaran bangunan, lahan, kendaraan, dan industri di seluruh wilayah Kabupaten Deli Serdang."
+    },
+    {
+      "judul": "Penyelamatan & Rescue Non-Kebakaran",
+      "deskripsi": "Operasi penyelamatan darurat di luar kebakaran, termasuk evakuasi warga dan evakuasi hewan, sebagaimana disampaikan langsung oleh Kepala Dinas Damkar."
+    },
+    {
+      "judul": "Edukasi & Sosialisasi Kebakaran",
+      "deskripsi": "Sosialisasi pencegahan kebakaran dan penggunaan Alat Pemadam Api Ringan (APAR) kepada masyarakat dan pelaku usaha."
+    },
+    {
+      "judul": "Pelatihan & Sertifikasi Petugas Peran Kebakaran",
+      "deskripsi": "Wilayah Deli Serdang menjadi salah satu lokasi pelatihan sertifikasi Damkar Tingkat D (Petugas Peran Penanggulangan Kebakaran) yang terdaftar di Kemnaker RI."
+    }
+  ],
+  "biaya": "Seluruh layanan kedaruratan Damkar bersifat GRATIS untuk masyarakat.",
+  "jamOperasional": "24 jam setiap hari"
+}

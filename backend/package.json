@@ -1,0 +1,16 @@
+{
+  "name": "damkar-deliserdang-backend",
+  "version": "1.0.0",
+  "description": "REST API backend untuk website Dinas Pemadam Kebakaran dan Penyelamatan Kabupaten Deli Serdang",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.19.2",
+    "mysql2": "^3.23.4"
+  }
+}
